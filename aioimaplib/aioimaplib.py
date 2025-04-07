@@ -28,7 +28,7 @@ from collections import namedtuple
 from copy import copy
 from datetime import datetime, timezone, timedelta
 from enum import Enum
-from typing import Union, Any, Coroutine, Callable, Optional, Pattern, List
+from typing import Union, Any, Coroutine, Callable, Optional, List
 
 # to avoid imap servers to kill the connection after 30mn idling
 # cf https://www.imapwiki.org/ClientImplementation/Synchronization
@@ -620,7 +620,7 @@ class IMAP4ClientProtocol(asyncio.Protocol):
     async def wait_async_pending_commands(self) -> None:
         await asyncio.wait([asyncio.ensure_future(cmd.wait()) for cmd in self.pending_async_commands.values()])
 
-    async def wait(self, state_regexp: Pattern) -> None:
+    async def wait(self, state_regexp: str) -> None:
         state_re = re.compile(state_regexp)
         async with self.state_condition:
             await self.state_condition.wait_for(lambda: state_re.match(self.state))
@@ -840,7 +840,7 @@ class IMAP4:
     async def getquotaroot(self, mailbox_name: str) -> Response:
         return await asyncio.wait_for(self.protocol.execute(Command('GETQUOTAROOT', self.protocol.new_tag(), 'INBOX', untagged_resp_name='QUOTA')), self.timeout)
 
-    async def list(self, reference_name: str, mailbox_pattern: Pattern) -> Response:
+    async def list(self, reference_name: str, mailbox_pattern: str) -> Response:
         return await asyncio.wait_for(self.protocol.simple_command('LIST', reference_name, mailbox_pattern), self.timeout)
 
     async def append(self, message_bytes, mailbox: str = 'INBOX', flags: str = None, date: Any = None) -> Response:
