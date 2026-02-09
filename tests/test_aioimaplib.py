@@ -340,6 +340,33 @@ async def test_search_two_messages(with_server):
 
 
 @pytest.mark.asyncio()
+async def test_search_default_charset_is_none(with_server):
+    """Default charset should be None to avoid sending CHARSET which some servers reject."""
+    with_server.receive(Mail.create(['user']))
+    imap_client = await login_user_async('user', 'pass', select=True)
+
+    # Default charset=None should work (no CHARSET sent)
+    result, data = await imap_client.search('ALL')
+    assert 'OK' == result
+    assert b'1' == data[0]
+
+    # Explicit charset='utf-8' should still work
+    result, data = await imap_client.search('ALL', charset='utf-8')
+    assert 'OK' == result
+    assert b'1' == data[0]
+
+    # uid_search default charset=None should work
+    result, data = await imap_client.uid_search('ALL')
+    assert 'OK' == result
+    assert b'1' == data[0]
+
+    # uid_search explicit charset='utf-8' should still work
+    result, data = await imap_client.uid_search('ALL', charset='utf-8')
+    assert 'OK' == result
+    assert b'1' == data[0]
+
+
+@pytest.mark.asyncio()
 async def test_search_messages(with_server):
     """Increase compatibility with https://docs.python.org/3/library/imaplib.html#imap4-example."""
     with_server.receive(Mail.create(['user']))
