@@ -26,8 +26,24 @@ import functools
 import pytz
 import sys
 
+from aioimaplib import imap_testing_server
 from aioimaplib.imap_testing_server import ServerState, Mail, MockImapServer, ImapProtocol, InvalidUidSet
 import pytest
+
+
+def test_imap_protocol_creates_loop_without_current_loop_on_python_314(monkeypatch):
+    def no_running_loop():
+        raise RuntimeError("no running event loop")
+
+    monkeypatch.setattr(imap_testing_server.sys, "version_info", (3, 14, 0))
+    monkeypatch.setattr(imap_testing_server.asyncio, "get_running_loop", no_running_loop)
+
+    protocol = ImapProtocol(None)
+
+    try:
+        assert protocol.loop is not None
+    finally:
+        protocol.loop.close()
 
 
 class TestMailToString(unittest.TestCase):
