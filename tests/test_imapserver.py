@@ -17,6 +17,7 @@
 import email
 import imaplib
 import unittest
+from unittest import mock
 from datetime import datetime
 
 import asyncio
@@ -100,6 +101,19 @@ class TestMailToString(unittest.TestCase):
 
         with pytest.raises(InvalidUidSet):
             ImapProtocol(None)._build_sequence_range('2:1')
+
+    @unittest.skipIf(sys.version_info < (3, 10), 'uses get_event_loop before Python 3.10')
+    def test_protocol_creates_loop_when_none_is_running(self):
+        loop = object()
+
+        with mock.patch(
+            'aioimaplib.imap_testing_server.asyncio.get_running_loop',
+            side_effect=RuntimeError,
+        ), mock.patch(
+            'aioimaplib.imap_testing_server.asyncio.new_event_loop',
+            return_value=loop,
+        ):
+            assert ImapProtocol(None).loop is loop
 
 
 class TestServerState(unittest.TestCase):

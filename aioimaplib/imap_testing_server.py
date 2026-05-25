@@ -48,6 +48,16 @@ CAPABILITIES = 'IDLE UIDPLUS MOVE ENABLE NAMESPACE AUTH=XOAUTH2'
 CRLF = b'\r\n'
 
 
+def _get_or_create_loop():
+    if sys.version_info < (3, 10):
+        return asyncio.get_event_loop()
+
+    try:
+        return asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.new_event_loop()
+
+
 class InvalidUidSet(RuntimeError):
     def __init__(self, *args) -> None:
         super().__init__(*args)
@@ -198,12 +208,12 @@ class ImapProtocol(asyncio.Protocol):
     DEFAULT_QUOTA = 5000
 
     def __init__(self, server_state, fetch_chunk_size=0, capabilities=CAPABILITIES,
-                 loop=asyncio.get_event_loop()):
+                 loop=None):
         self.uidvalidity = int(datetime.now().timestamp())
         self.capabilities = capabilities
         self.state_to_send = list()
         self.delay_seconds = 0
-        self.loop = loop
+        self.loop = loop if loop is not None else _get_or_create_loop()
         self.fetch_chunk_size = fetch_chunk_size
         self.transport = None
         self.server_state = server_state
@@ -675,16 +685,7 @@ class MockImapServer:
         self._server_state = ServerState()
         self._connections = list()
         self.capabilities = capabilities
-        if loop is None:
-            if sys.version_info < (3, 10):
-                self.loop = asyncio.get_event_loop()
-            else:
-                try:
-                    self.loop = asyncio.get_running_loop()
-                except RuntimeError:
-                    self.loop = asyncio.new_event_loop()
-        else:
-            self.loop = loop
+        self.loop = loop if loop is not None else _get_or_create_loop()
 
     def receive(self, mail, imap_user=None, mailbox='INBOX'):
         """
