@@ -15,11 +15,12 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import asyncio
+import inspect
 import logging
 import ssl
 import unittest
 from datetime import datetime, timedelta
-from unittest.mock import call, MagicMock
+from unittest.mock import call, AsyncMock, MagicMock
 
 import pytest
 from pytz import utc
@@ -190,6 +191,30 @@ class TestAioimaplibUtils(unittest.TestCase):
         assert 'tag NAME arg1 arg2' == str(Command('NAME', 'tag', 'arg1', 'arg2'))
         assert 'tag UID NAME arg' == str(Command('NAME', 'tag', 'arg', prefix='UID'))
         assert 'tag UID NAME' == str(Command('NAME', 'tag', prefix='UID'))
+
+    def test_search_defaults_do_not_request_charset(self):
+        assert inspect.signature(IMAP4ClientProtocol.search).parameters['charset'].default is None
+        assert inspect.signature(aioimaplib.IMAP4.search).parameters['charset'].default is None
+        assert inspect.signature(aioimaplib.IMAP4.uid_search).parameters['charset'].default is None
+
+
+@pytest.mark.asyncio()
+async def test_protocol_search_omits_charset_by_default():
+    imap_protocol = IMAP4ClientProtocol(asyncio.get_running_loop())
+    imap_protocol.execute = AsyncMock()
+
+    await imap_protocol.search('ALL')
+    command = imap_protocol.execute.call_args.args[0]
+    assert ('ALL',) == command.args
+
+    await imap_protocol.search('ALL', charset='utf-8')
+    command = imap_protocol.execute.call_args.args[0]
+    assert ('CHARSET', 'utf-8', 'ALL') == command.args
+
+    await imap_protocol.search('ALL', by_uid=True)
+    command = imap_protocol.execute.call_args.args[0]
+    assert 'UID ' == command.prefix
+    assert ('ALL',) == command.args
 
 
 class TestDataReceived(unittest.TestCase):
