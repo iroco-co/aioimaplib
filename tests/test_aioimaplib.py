@@ -19,7 +19,7 @@ import logging
 import ssl
 import unittest
 from datetime import datetime, timedelta
-from unittest.mock import call, MagicMock
+from unittest.mock import call, MagicMock, patch
 
 import pytest
 from pytz import utc
@@ -192,6 +192,20 @@ class TestAioimaplibUtils(unittest.TestCase):
         assert 'tag UID NAME' == str(Command('NAME', 'tag', prefix='UID'))
 
 
+class TestCommandRejectsControlCharacters(unittest.TestCase):
+    def test_argument_with_crlf_is_rejected_before_the_command_exists(self):
+        with self.assertRaises(ValueError):
+            Command('SEARCH', 'tag', 'HEADER Message-ID "x"\r\nX1 NOOP')
+
+    def test_argument_with_nul_is_rejected(self):
+        with self.assertRaises(ValueError):
+            Command('SEARCH', 'tag', 'x\x00y')
+
+    def test_argument_with_bare_lf_is_rejected(self):
+        with self.assertRaises(ValueError):
+            Command('STORE', 'tag', '1', '+FLAGS', '(\\Seen)\nX1 NOOP')
+
+
 class TestDataReceived(unittest.TestCase):
     def setUp(self):
         self.imap_protocol = IMAP4ClientProtocol(None)
@@ -337,6 +351,21 @@ async def test_search_two_messages(with_server):
 
     assert 'OK' == result
     assert b'1 2' == data[0]
+
+
+@pytest.mark.asyncio()
+async def test_search_criteria_with_crlf_is_rejected_and_nothing_is_sent(with_server):
+    with_server.receive(Mail.create(['user']))
+    imap_client = await login_user_async('user', 'pass', select=True)
+
+    with patch.object(imap_client.protocol, 'send', wraps=imap_client.protocol.send) as send:
+        with pytest.raises(ValueError):
+            await imap_client.search('HEADER Message-ID "x"\r\nX1 STORE 1:* +FLAGS (\\Deleted)\r\nX2 EXPUNGE')
+        send.assert_not_called()
+
+    result, data = await imap_client.search('ALL')
+    assert 'OK' == result
+    assert b'1' == data[0]
 
 
 @pytest.mark.asyncio()

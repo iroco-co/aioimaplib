@@ -140,9 +140,18 @@ def arguments_rfs2971(**kwargs: Union[dict, list, str]) -> Union[dict, list]:
     return args
 
 
+# NUL, CR and LF end or split a command line on the wire (RFC 3501 section 9), so an argument
+# carrying one of them would be executed by the server as a separate command. Same check as
+# CPython's imaplib (gh-143921).
+CONTROL_CHARS = re.compile(r'[\x00\r\n]')
+
+
 class Command:
     def __init__(self, name: str, tag: str, *args, prefix: str = None, untagged_resp_name: str = None,
                  loop: asyncio.AbstractEventLoop = None, timeout: float = None) -> None:
+        for arg in args:
+            if arg is not None and CONTROL_CHARS.search(str(arg)):
+                raise ValueError('NUL, CR and LF are not allowed in %s command arguments' % name)
         self.name = name
         self.tag = tag
         self.args = args
