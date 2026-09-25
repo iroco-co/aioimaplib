@@ -724,7 +724,12 @@ class IMAP4:
         return self.protocol.state
 
     async def wait_hello_from_server(self) -> None:
-        await asyncio.wait_for(self.protocol.wait('AUTH|NONAUTH'), self.timeout)
+        await asyncio.wait_for(self._wait_connection_and_hello(), self.timeout)
+
+    async def _wait_connection_and_hello(self) -> None:
+        # a refused connection, a failed DNS lookup or a TLS handshake error is raised here
+        await self._client_task
+        await self.protocol.wait('AUTH|NONAUTH')
 
     async def login(self, user: str, password: str) -> Response:
         return await asyncio.wait_for(self.protocol.login(user, password), self.timeout)

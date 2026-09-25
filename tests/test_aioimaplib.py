@@ -793,3 +793,19 @@ async def test_client_can_connect_to_server_over_ssl(with_ssl, with_ssl_server):
     assert 'IMAP4REV1' == imap_client.protocol.imap_version
     assert {'IMAP4rev1', 'YESAUTH'} == imap_client.protocol.capabilities
     assert imap_client.has_capability('YESAUTH')
+
+
+@pytest.mark.asyncio()
+async def test_wait_hello_from_server_raises_connection_error():
+    imap_client = aioimaplib.IMAP4(port=12345, loop=asyncio.get_running_loop(), timeout=3)
+
+    with pytest.raises(ConnectionRefusedError):
+        await asyncio.wait_for(imap_client.wait_hello_from_server(), 2)
+
+
+@pytest.mark.asyncio()
+async def test_wait_hello_from_server_raises_ssl_error(with_ssl_server):
+    imap_client = aioimaplib.IMAP4_SSL(port=12345, loop=asyncio.get_running_loop(), timeout=3)
+
+    with pytest.raises(ssl.SSLCertVerificationError):
+        await asyncio.wait_for(imap_client.wait_hello_from_server(), 2)
