@@ -125,19 +125,20 @@ def arguments_rfs2971(**kwargs: Union[dict, list, str]) -> Union[dict, list]:
     if kwargs:
         if len(kwargs) > ID_MAX_PAIRS_COUNT:
             raise ValueError('Must not send more than 30 field-value pairs')
-        args = ['(']
+        pairs = []
         for field, value in kwargs.items():
             field = quoted(str(field))
             value = quoted(str(value)) if value is not None else 'NIL'
             if len(field) > ID_MAX_FIELD_LEN:
                 raise ValueError('Field: {} must not be longer than 30'.format(field))
             if len(value) > ID_MAX_VALUE_LEN:
-                raise ValueError('Field: {} value: {} must not be longer than 1024'.format(field, value))
-            args.extend((field, value))
-        args.append(')')
+                raise ValueError('Value: {} must not be longer than 1024'.format(value))
+            pairs.append(f'{field} {value}')
+        args = [f'({" ".join(pairs)})']
     else:
         args = ['NIL']
     return args
+
 
 
 class Command:
