@@ -525,7 +525,7 @@ class IMAP4ClientProtocol(asyncio.Protocol):
     def idle_done(self) -> None:
         self.send('DONE')
 
-    async def search(self, *criteria, charset: Optional[str] = 'utf-8', by_uid: bool = False) -> Response:
+    async def search(self, *criteria, charset: Optional[str] = None, by_uid: bool = False) -> Response:
         args = ('CHARSET', charset) + criteria if charset is not None else criteria
         prefix = 'UID' if by_uid else ''
 
@@ -738,10 +738,10 @@ class IMAP4:
     async def select(self, mailbox: str = 'INBOX') -> Response:
         return await asyncio.wait_for(self.protocol.select(mailbox), self.timeout)
 
-    async def search(self, *criteria: str, charset: Optional[str] = 'utf-8') -> Response:
+    async def search(self, *criteria: str, charset: Optional[str] = None) -> Response:
         return await asyncio.wait_for(self.protocol.search(*criteria, charset=charset), self.timeout)
 
-    async def uid_search(self, *criteria: str, charset: Optional[str] = 'utf-8') -> Response:
+    async def uid_search(self, *criteria: str, charset: Optional[str] = None) -> Response:
         return await asyncio.wait_for(self.protocol.search(*criteria, by_uid=True, charset=charset), self.timeout)
 
     async def uid(self, command: str, *criteria: str) -> Response:
