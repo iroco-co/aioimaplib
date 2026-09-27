@@ -198,12 +198,21 @@ class ImapProtocol(asyncio.Protocol):
     DEFAULT_QUOTA = 5000
 
     def __init__(self, server_state, fetch_chunk_size=0, capabilities=CAPABILITIES,
-                 loop=asyncio.get_event_loop()):
+                 loop=None):
         self.uidvalidity = int(datetime.now().timestamp())
         self.capabilities = capabilities
         self.state_to_send = list()
         self.delay_seconds = 0
-        self.loop = loop
+        if loop is None:
+            if sys.version_info < (3, 10):
+                self.loop = asyncio.get_event_loop()
+            else:
+                try:
+                    self.loop = asyncio.get_running_loop()
+                except RuntimeError:
+                    self.loop = asyncio.new_event_loop()
+        else:
+            self.loop = loop
         self.fetch_chunk_size = fetch_chunk_size
         self.transport = None
         self.server_state = server_state
