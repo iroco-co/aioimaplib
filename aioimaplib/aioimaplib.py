@@ -194,7 +194,13 @@ class Command:
         nb_bytes_to_add = self._expected_size - len(self._resp_literal_data)
         self._resp_literal_data.extend(data[0:nb_bytes_to_add])
         if not self.wait_literal_data():
-            self.append_to_resp(self._resp_literal_data)
+            # Cast bytearray → bytes so downstream consumers that do
+            # isinstance(x, bytes) keep working (e.g. email.message_from_bytes
+            # which rejects bytearray with 'TypeError: initial_value must be
+            # str or None, not bytearray'). See issue: parsing FETCH body
+            # via aioimaplib + stdlib email fails on plain RFC822 messages
+            # because the FETCH literal arrives as bytearray.
+            self.append_to_resp(bytes(self._resp_literal_data))
             self._end_literal_data()
         self._reset_timer()
         return data[nb_bytes_to_add:]

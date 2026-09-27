@@ -130,6 +130,19 @@ class TestAioimaplibUtils(unittest.TestCase):
                                             call(b')', Command('NIL', 'unused')),
                                             call(b'TAG OK FETCH completed.', None)])
 
+
+    def test_literal_fetch_response_yields_bytes_not_bytearray(self):
+        # Regression: stdlib email.message_from_bytes rejects bytearray with
+        # TypeError: initial_value must be str or None, not bytearray.
+        # FETCH literal payload must be plain bytes for downstream consumers.
+        cmd = Command('FETCH', 'TAG')
+        self.imap_protocol._handle_line = MagicMock(return_value=cmd)
+        self.imap_protocol.data_received(b'* 1 FETCH (RFC822 {3}\r\nyo\n)\r\nTAG OK FETCH completed.\r\n')
+        for line in cmd.response.lines:
+            assert isinstance(line, bytes) and not isinstance(line, bytearray), (
+                f"line {line!r} is {type(line).__name__}, expected bytes"
+            )
+
     def test_line_with_attachment_literals(self):
         cmd = Command('FETCH', 'TAG')
         self.imap_protocol._handle_line = MagicMock(return_value=cmd)
