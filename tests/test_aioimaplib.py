@@ -193,6 +193,9 @@ class TestAioimaplibUtils(unittest.TestCase):
 
 
 class TestCommandRejectsControlCharacters(unittest.TestCase):
+    def setUp(self):
+        aioimaplib.get_running_loop = asyncio.new_event_loop  # monkey patch to avoid Exception "No running loop"
+
     def test_argument_with_crlf_is_rejected_before_the_command_exists(self):
         with self.assertRaises(ValueError):
             Command('SEARCH', 'tag', 'HEADER Message-ID "x"\r\nX1 NOOP')
