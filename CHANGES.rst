@@ -1,6 +1,11 @@
 Changes
 =======
 
+V2.0.3
+------
+
+- fix: raise connection errors from wait_hello_from_server #141 #91
+
 V2.0.2
 ------
 
