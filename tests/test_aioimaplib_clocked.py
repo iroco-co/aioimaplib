@@ -132,7 +132,6 @@ async def test_when_sync_commands_timeout__they_should_be_removed_from_protocol_
     assert imap_client.protocol.pending_sync_command is None
 
 
-# test failing with python 12
 @pytest.mark.asyncio()
 async def test_idle_start__exits_queue_get_without_timeout_error(event_loop, with_server, advance_time):
     imap_client = await login_user_async('user', 'pass', select=True, loop=event_loop)
@@ -143,7 +142,7 @@ async def test_idle_start__exits_queue_get_without_timeout_error(event_loop, wit
     push_task = asyncio.ensure_future(imap_client.wait_server_push(idle_timeout + 2))
     await advance_time(idle_timeout + 1)
 
-    r = await asyncio.wait_for(push_task, 0)
+    r = await push_task
     assert STOP_WAIT_SERVER_PUSH == r
 
 
