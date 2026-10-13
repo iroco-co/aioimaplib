@@ -6,6 +6,7 @@ V2.0.2
 
 - fix: reject NUL, CR and LF in command arguments to prevent command injection #140
 - build: drop Python 3.9 support, it is not maintained anymore
+- build: test with Python 3.12 and 3.13
 
 V2.0.1
 ------
