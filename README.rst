@@ -26,7 +26,7 @@ Thank you to all contributors for your time and interest :pray: :point_right:
 
 The aim is to port the imaplib with asyncio_, to benefit from the sleep or treat model. It has no dependencies for runtime (the core library).
 
-It is tested against python 3.9, 3.10, 3.11 matrix. But the library itself *could* run with other python versions.
+It is tested against python 3.10, 3.11 matrix. But the library itself *could* run with other python versions.
 
 Example
 -------
