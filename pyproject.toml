@@ -1,11 +1,11 @@
-[tool.poetry]
+[project]
 name = "aioimaplib"
 version = "2.0.1"
 description = "Python asyncio IMAP4rev1 client library"
-authors = ["Bruno THOMAS <bthomas@iroco.fr>"]
-license = "GPL-3.0"
+authors = [{ name = "Bruno THOMAS", email = "bthomas@iroco.fr" }]
+license = "GPL-3.0-only"
 readme = "README.rst"
-repository = "https://github.com/iroco-co/aioimaplib"
+requires-python = ">=3.10,<4.0"
 keywords = ["asyncio", "mail", "imap"]
 classifiers = [
     "Intended Audience :: Developers",
@@ -19,10 +19,14 @@ classifiers = [
     "Topic :: Internet"
 ]
 
-packages = [{include = "aioimaplib"}]
+[project.urls]
+Repository = "https://github.com/iroco-co/aioimaplib"
 
-[tool.poetry.dependencies]
-python = "^3.10"
+[project.scripts]
+imap-testing-server = "aioimaplib.imap_testing_server:main"
+
+[tool.poetry]
+packages = [{include = "aioimaplib"}]
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3"
@@ -37,8 +41,5 @@ httpx-oauth = "^0.16"
 pytest-cov = "^6.0.0"
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
-
-[tool.poetry.scripts]
-imap-testing-server = "aioimaplib.imap_testing_server:main"
