@@ -1,6 +1,11 @@
 Changes
 =======
 
+V2.0.2
+------
+
+- fix: reject NUL, CR and LF in command arguments to prevent command injection #140
+
 V2.0.1
 ------
 
