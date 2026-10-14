@@ -89,6 +89,13 @@ class TestAioimaplibUtils(unittest.TestCase):
         self.imap_protocol._handle_line.assert_has_calls([call(b'* 123 EXPUNGE', None),
                                             call(b'TAG OK SELECT completed.', None)])
 
+    def test_split_responses_many_lines_does_not_recurse(self):
+        # old _handle_responses would raise RecursionError with so much lines
+        lines = [b'* %d FETCH (UID %d)\r\n' % (i, i) for i in range(1, 1500)]
+        lines.append(b'TAG OK FETCH completed.\r\n')
+        self.imap_protocol.data_received(b''.join(lines))
+        assert self.imap_protocol._handle_line.call_count == 1500
+
     def test_incomplete_line_with_literal_fetch(self):
         cmd = Command('FETCH', 'TAG')
         self.imap_protocol._handle_line = MagicMock(return_value=cmd)
