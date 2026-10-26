@@ -38,7 +38,7 @@ pytz = "^2024"
 tzlocal = "^5.2"
 imaplib2 = "3.6"
 docutils = "^0.21"
-pyOpenSSL = "^24.3"
+pyOpenSSL = "^26.0"
 httpx-oauth = "^0.16"
 pytest-cov = "^6.0.0"
 
